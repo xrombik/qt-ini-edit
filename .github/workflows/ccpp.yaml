@@ -1,0 +1,20 @@
+
+name: C/C++ with Make
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: install-deps
+      run: |
+        chmod +x ./install-deps.sh
+        ./install-deps.sh
+    - name: build
+      run: |
+        chmod +x ./build.sh
+        ./build.sh
