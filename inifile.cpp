@@ -226,6 +226,13 @@ bool IniFile :: rewind_section(StrNode** cur, const char* section, int* found, c
     {
         *found += 1;
     }
+    // следующий - начало другой секции
+    else if ((*found == 2) && (*cur)->next)
+    {
+        if (1 == sscanf((*cur)->next->data, " [%[^]]] ", buf))
+            *found += 1;
+    }
+
     return false;
 }
 
