@@ -18,3 +18,8 @@ jobs:
       run: |
         chmod +x ./build.sh
         ./build.sh
+    - name: tests
+      run: |
+        chmod +x ./run-tests.sh
+        ./run-tests.sh
+        
