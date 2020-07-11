@@ -1,0 +1,16 @@
+version: 1.0.{build}
+cache:
+  - C:/Tools/vcpkg -> appveyor.yml
+build_script:
+- cmd: >-
+    vcpkg install qt5:x64-windows
+
+    if not exist "build" mkdir "build"
+
+    cd build
+
+    cmake ..
+
+    msbuild qt-ini-edit.sln
+
+    cd ..
