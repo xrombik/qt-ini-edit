@@ -35,7 +35,6 @@ void InifileModel::rebuildMdata(const IniFile &ini, int lvl, const char* section
 
 int InifileModel::rowCount(const QModelIndex & /*parent*/) const
 {
-   qDebug("rowCount:%u", mdata.size());
    return mdata.size();
 }
 
@@ -51,7 +50,6 @@ QVariant InifileModel::data(const QModelIndex &index, int role) const
     if (role == Qt::DisplayRole)
     {
         size_t row = index.row();
-        qDebug("row:%u", row);
         size_t column = index.column();
         const QString* s = &mdata.at(row);
         QStringList ss = s->split("=");
