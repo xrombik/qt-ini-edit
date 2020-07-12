@@ -35,6 +35,7 @@ void MainWindow :: processKeyEvent(QKeyEvent *keyEvent)
            lvl = 1;
            const char* section = getCurSectionName();
            inimodel.rebuildMdata(ini, lvl, section);
+           this->tblView.reset();
         }
         break;
     case Qt::Key_Escape:
@@ -63,13 +64,15 @@ void MainWindow :: processKeyEvent(QKeyEvent *keyEvent)
 }
 
 
-MainWindow :: MainWindow(const char* fileName, QWidget *parent) : QWidget(parent)
+MainWindow :: MainWindow(const char* fileName, const char* outFileName, QWidget *parent) : QWidget(parent)
 {
     ini.load(fileName);
     inimodel.rebuildMdata(ini);
     lblPath.setText(fileName);
+    lblOutPath.setText(outFileName);
     tblView.setModel(&inimodel);
     mainLayout.addWidget(&lblPath);
+    mainLayout.addWidget(&lblOutPath);
     mainLayout.addWidget(&tblView);
     setLayout(&mainLayout);
     tblView.installEventFilter(&keyReceiver);

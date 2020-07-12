@@ -24,11 +24,12 @@ class MainWindow : public QWidget
     Q_OBJECT
     int lvl;
 public:
-    MainWindow(const char* fileName, QWidget* parent = nullptr);
+    MainWindow(const char* fileName,  const char* outFileName, QWidget* parent = nullptr);
     void processKeyEvent(QKeyEvent* keyEvent);
 private:
     const char* getCurSectionName(void) const;
     QLabel lblPath;
+    QLabel lblOutPath;
     QVBoxLayout mainLayout;
     QTableView tblView;
     IniFile ini;

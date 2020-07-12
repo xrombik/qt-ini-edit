@@ -25,18 +25,17 @@ void InifileModel::rebuildMdata(const IniFile &ini, int lvl, const char* section
         StrNode* cur = params.top();
         for (int i = 0; i < count; i ++)
         {
-            mdata[i] = QString (cur->data);
+            mdata[i] = QString(cur->data);
             cur = cur->next;
         }
     }
-    QModelIndex topLeft = createIndex(0, 0);
-    QModelIndex bottomRight = createIndex(columnCount(), rowCount());
-    emit dataChanged(topLeft, bottomRight);
+    emit layoutChanged();
 }
 
 
 int InifileModel::rowCount(const QModelIndex & /*parent*/) const
 {
+   qDebug("rowCount:%u", mdata.size());
    return mdata.size();
 }
 
@@ -52,6 +51,7 @@ QVariant InifileModel::data(const QModelIndex &index, int role) const
     if (role == Qt::DisplayRole)
     {
         size_t row = index.row();
+        qDebug("row:%u", row);
         size_t column = index.column();
         const QString* s = &mdata.at(row);
         QStringList ss = s->split("=");

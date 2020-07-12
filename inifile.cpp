@@ -21,12 +21,12 @@ void IniFile :: process_str_buf(char* buf, const char* fmt, int need_count, int*
     char* cur = strtok(buf, " ");
     while (*fact_count < need_count)
     {
-        cur = strtok(nullptr, " ");
         if (cur)
         {
             *fact_count += 1 == sscanf(cur, fmt, &vals[*fact_count]);
         }
         else break;
+        cur = strtok(nullptr, " ");
     }
 }
 
@@ -48,7 +48,7 @@ bool IniFile :: get_param(const char* section, const char* param, int need_count
     int sl = 0;
     if (!get_param(section, param, sizeof(buf) / sizeof(buf[0]), &sl, buf))
         return false;
-    process_str_buf(buf, "%f", need_count, fact_count, vals);
+    process_str_buf(buf, "%lf", need_count, fact_count, vals);
     return *fact_count > 0;
 }
 
