@@ -66,6 +66,7 @@ void MainWindow :: processKeyEvent(QKeyEvent *keyEvent)
 
 MainWindow :: MainWindow(const char* fileName, const char* outFileName, QWidget *parent) : QWidget(parent)
 {
+    lvl = 0;
     ini.load(fileName);
     inimodel.rebuildMdata(ini);
     lblPath.setText(fileName);
