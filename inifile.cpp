@@ -60,8 +60,11 @@ bool IniFile :: get_param(const char* section, const char* param, int max_buf_si
     char buf[INI_LINELEN_MAX];
     while (cur)
     {
-        if (rewind_section(&cur, section, &found, buf))
+        if (rewind_section(cur, section, &found, buf))
+        {
+            cur = cur->next;
             continue;
+        }
 
         if (found == 2)
         {
@@ -99,8 +102,11 @@ int IniFile :: get_params_count(const char* section, StrList* params) const
     char buf[INI_LINELEN_MAX];
     while (cur)
     {
-        if (rewind_section(&cur, section, &found, buf))
+        if (rewind_section(cur, section, &found, buf))
+        {
+            cur = cur->next;
             continue;
+        }
 
         if (found == 2)
         {
@@ -132,7 +138,7 @@ bool IniFile :: set_param(const char* section, const char* param, int count, con
 bool IniFile :: set_param(const char* section, const char* param, int count, const double* vals)
 {
     char buf[INI_LINELEN_MAX];
-    format_params(buf, "%f ", count, vals);
+    format_params(buf, "%lf ", count, vals);
     return set_param(section, param, buf);
 }
 
@@ -156,8 +162,11 @@ bool IniFile :: set_param(const char* section, const char* param, const char* st
 
     while (cur)
     {
-        if (rewind_section(&cur, section, &found, buf))
+        if (rewind_section(cur, section, &found, buf))
+        {
+            cur = cur->next;
             continue;
+        }
 
         if (found == 2) // начало секции
         {
@@ -201,35 +210,34 @@ bool IniFile :: set_param(const char* section, const char* param, const char* st
 }
 
 
-bool IniFile :: rewind_section(StrNode** cur, const char* section, int* found, char* buf) const
+bool IniFile :: rewind_section(StrNode* cur, const char* section, int* found, char* buf) const
 {
     // Начало секции?
-    if (1 == sscanf((*cur)->data, " [%[^]]] ", buf))
+    if (1 == sscanf(cur->data, " [%[^]]] ", buf))
     {
         *found += 1;
         // Искомая секция?
         sprintf(buf, "[%s]\n", section);
-        if (0 == strcmp(buf, (*cur)->data))
+        if (0 == strcmp(buf, cur->data))
             *found += 1;
         else
             *found = 0;
 
         // Взять следующий узел
-        if ((*found == 2) && ((*cur)->next != nullptr))
+        if ((*found == 2) && (cur->next != nullptr))
         {
-            *cur = (*cur)->next;
             return true;
         }
     }
     // дошли до конца секции и файла
-    else if ((*found == 2) && ((*cur)->next == nullptr))
+    else if ((*found == 2) && (cur->next == nullptr))
     {
         *found += 1;
     }
     // следующий - начало другой секции
-    else if ((*found == 2) && (*cur)->next)
+    else if ((*found == 2) && cur->next)
     {
-        if (1 == sscanf((*cur)->next->data, " [%[^]]] ", buf))
+        if (1 == sscanf(cur->next->data, " [%[^]]] ", buf))
             *found += 1;
     }
 
@@ -245,9 +253,12 @@ bool IniFile :: delete_param(const char* section, const char* param)
     bool rc = false;
     while (cur)
     {
-        if (rewind_section(&cur, section, &found, buf))
+        if (rewind_section(cur, section, &found, buf))
+        {
+            cur = cur->next;
             continue;
-
+        }
+        
         // Удалить параметр в секции
         if (found == 2)
         {
@@ -282,8 +293,11 @@ bool IniFile :: delete_section(const char* section)
     char buf[INI_LINELEN_MAX];
     while (cur)
     {
-        if (rewind_section(&cur, section, &found, buf))
+        if (rewind_section(cur, section, &found, buf))
+        {
+            cur = cur->next;
             continue;
+        }
 
         // Удалить параметр в секции
         if (found == 2)

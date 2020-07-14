@@ -3,3 +3,4 @@ cd build
 cmake ..
 msbuild qt-ini-edit.sln
 cd ..
+pause

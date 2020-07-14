@@ -13,7 +13,7 @@
 class IniFile
 {
     StrList lines;
-    bool rewind_section(StrNode** cur, const char* section, int* found, char* buf) const;
+    bool rewind_section(StrNode* cur, const char* section, int* found, char* buf) const;
 
     template <typename T>
     void format_params(char* buf, const char* fmt, size_t count, T* vals);
