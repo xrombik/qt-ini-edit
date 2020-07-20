@@ -57,9 +57,14 @@ int main(int argc, char *argv[])
     int ls4 = 0;
     bool rc13 = ini.get_param("Section1", "Param3", 3, &ls4, double_buf);
     
+    int c4 = ini.get_params_count("Section1");
+    bool rc14 = ini.rename_section("Section1", "Section1_RENAMED");
+    int c5 = ini.get_params_count("Section1");
+    int c6 = ini.get_params_count("Section1_RENAMED");
+
     bool rc = rc0 && rc1 && (c0 == 3) && rc2 && (c1 == 2) && (c2 == 4) && (c3 == 0)
             && (!rc3) && rc4 && rc5 && rc6 && rc7 && rc8 && rc9 && (!rc10) && (!rc11)
-            && rc12 && (ls3 == 4) && (rc13) && (ls4 == 3);
+            && rc12 && (ls3 == 4) && rc13 && (ls4 == 3) && rc14 && (c5 == 0) && (c4 == c6);
 
     return rc ? 0 : 1;
 }

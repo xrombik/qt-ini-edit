@@ -1,8 +1,39 @@
 #include "inimodel.h"
 
 
+const QString* InifileModel::getMRow(int row)
+{
+    return &mdata.at(static_cast<size_t>(row));
+}
 
-void InifileModel::rebuildMdata(const IniFile &ini, int lvl, const char* section)
+
+bool InifileModel::setData(const QModelIndex& index, const QVariant& value, int role)
+{
+    if (role == Qt::EditRole)
+    {
+        size_t row = index.row();
+        if (mdata.find(row) != mdata.end())
+        {
+            QStringList sl = mdata[row].split(" = ");
+            if (sl.size() == 2)
+            {
+                sl[1] = value.toString();
+                mdata[row] = sl[0] + " = " + sl[1];
+                emit editCompleted(mdata.at(row));
+            }
+        }
+    }
+    return true;
+}
+
+
+Qt::ItemFlags InifileModel::flags(const QModelIndex& index) const
+{
+    return Qt::ItemIsSelectable | Qt::ItemIsEditable | Qt::ItemIsEnabled;
+}
+
+
+void InifileModel::rebuildMdata(const IniFile& ini, const char* section)
 {
     mdata.clear();
     if (lvl == 0)
@@ -12,7 +43,7 @@ void InifileModel::rebuildMdata(const IniFile &ini, int lvl, const char* section
         StrNode* cur = sections.top();
         for (int i = 0; i < count; i ++)
         {
-            mdata[i] = QString(cur->data);
+            mdata[i] = QString(cur->data).remove('\n');
             cur = cur->next;
         }
     }
@@ -25,7 +56,7 @@ void InifileModel::rebuildMdata(const IniFile &ini, int lvl, const char* section
         StrNode* cur = params.top();
         for (int i = 0; i < count; i ++)
         {
-            mdata[i] = QString(cur->data);
+            mdata[i] = QString(cur->data).remove('\n');
             cur = cur->next;
         }
     }
@@ -33,37 +64,43 @@ void InifileModel::rebuildMdata(const IniFile &ini, int lvl, const char* section
 }
 
 
-int InifileModel::rowCount(const QModelIndex & /*parent*/) const
+int InifileModel::rowCount(const QModelIndex& parent) const
 {
    return mdata.size();
 }
 
 
-int InifileModel::columnCount(const QModelIndex & /*parent*/) const
+int InifileModel::columnCount(const QModelIndex& parent) const
 {
-    return 2;
+    return lvl + 1;
 }
 
 
-QVariant InifileModel::data(const QModelIndex &index, int role) const
+QVariant InifileModel::data(const QModelIndex& index, int role) const
 {
-    if (role == Qt::DisplayRole)
+    switch (role) {
+    case Qt::EditRole:
+    case Qt::DisplayRole:
     {
         size_t row = index.row();
         size_t column = index.column();
-        const QString* s = &mdata.at(row);
-        QStringList ss = s->split("=");
-        if (ss.length() == 2)
+        if (mdata.find(row) != mdata.end())
         {
-            return ss[column];
-        }
-        else
-        {
-            if (column == 0)
-                return *s;
+            const QString* s = &mdata.at(row);
+            QStringList ss = s->split(" = ");
+            if (ss.size() == 2)
+            {
+                return ss[column];
+            }
             else
-                return QString("");
+            {
+                if (column == 0)
+                    return *s;
+                else
+                    return QString("");
+            }
         }
-    }
+        break;
+    } }
     return QVariant();
 }

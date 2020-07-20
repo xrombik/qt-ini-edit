@@ -1,6 +1,26 @@
 #include "inifile.h"
 
 
+bool IniFile :: rename_section(const char* section1, const char* section2)
+{   
+    char buf[INI_LINELEN_MAX];
+    sprintf(buf, "[%s]\n", section1);
+    StrNode* cur = lines.find(buf);
+    if (!cur)
+        return false;
+    sprintf(buf, "[%s]\n", section2);
+    cur->data = (char*) realloc(cur->data, strlen(buf) + sizeof('\0'));
+    strcpy(cur->data, buf);
+    return true;
+}
+
+
+void IniFile :: append(const char* s)
+{
+    lines.append(s);
+}
+
+
 template <typename T>
 void IniFile :: format_params(char* buf, const char* fmt, size_t count, T* vals)
 {
@@ -60,13 +80,17 @@ bool IniFile :: get_param(const char* section, const char* param, int max_buf_si
     char buf[INI_LINELEN_MAX];
     while (cur)
     {
-        if (rewind_section(cur, section, &found, buf))
+        rewind_section(cur, section, &found, buf);
+        if (found == IniRS::BEGIN)
+        {
+            continue;
+        }
+        else if (found == IniRS::FOUND)
         {
             cur = cur->next;
             continue;
         }
-
-        if (found == 2)
+        else if (found == IniRS::PARAM)
         {
             if (strchr(cur->data, '=') && (cur->data[0] != ';'))
             {
@@ -84,10 +108,6 @@ bool IniFile :: get_param(const char* section, const char* param, int max_buf_si
                 }
             }
         }
-        else if (found > 2)
-        {
-            break;
-        }
         cur = cur->next;
     }
     return false;
@@ -102,13 +122,17 @@ int IniFile :: get_params_count(const char* section, StrList* params) const
     char buf[INI_LINELEN_MAX];
     while (cur)
     {
-        if (rewind_section(cur, section, &found, buf))
+        rewind_section(cur, section, &found, buf);
+        if (found == IniRS::BEGIN)
+        {
+            continue;
+        }
+        else if (found == IniRS::FOUND)
         {
             cur = cur->next;
             continue;
         }
-
-        if (found == 2)
+        else if (found == IniRS::PARAM)
         {
             if (strchr(cur->data, '=') && (cur->data[0] != ';'))
             {
@@ -117,7 +141,7 @@ int IniFile :: get_params_count(const char* section, StrList* params) const
                 count ++;
             }
         }
-        else if (found > 2)
+        else if (found == IniRS::END)
         {
             break;
         }
@@ -162,17 +186,24 @@ bool IniFile :: set_param(const char* section, const char* param, const char* st
 
     while (cur)
     {
-        if (rewind_section(cur, section, &found, buf))
+        rewind_section(cur, section, &found, buf);
+        if (found == IniRS::BEGIN)
         {
-            cur = cur->next;
             continue;
         }
-
-        if (found == 2) // начало секции
+        else if (found == IniRS::FOUND)
+        {
+            if (cur->next)
+            {
+                cur = cur->next;
+            }
+            continue;
+        }
+        else if ((found == IniRS::PARAM) && cur->next)
         {
             sprintf(buf, "%s =", param);
             size_t ls = strlen(buf);
-            if (0 == strncmp(buf, cur->data, ls))
+            if (0 == strncmp(buf, cur->data, ls))  // такой параметр есть, просто заменить
             {
                 size_t slv = strlen(str);
                 cur->data = (char*) realloc(cur->data, ls + slv + sizeof(' ') + sizeof('\n') + sizeof('\0'));
@@ -180,27 +211,28 @@ bool IniFile :: set_param(const char* section, const char* param, const char* st
                 rc = true;
                 break;
             }
+            cur = cur->next;
+            continue;
         }
-        else if (found > 2)  // конец секции
+        
+        // начинается следующая секция или конец
+        if ((found == IniRS::END) ||  ((found == IniRS::PARAM) && (!cur->next)))
         {
-            if (sec)
+            StrNode* sn = (StrNode*) malloc(sizeof(StrNode));
+            sprintf(buf, "%s = %s\n", param, str);
+            sn->data = (char*) malloc(strlen(buf) + sizeof('\0'));
+            strcpy(sn->data, buf);
+            sn->next = nullptr;
+            rc = true;
+            if (!sec->next) // если секция в конце
             {
-                StrNode* sn = (StrNode*) malloc(sizeof(StrNode));
-                sprintf(buf, "%s = %s\n", param, str);
-                sn->data = (char*) malloc(strlen(buf) + sizeof('\0'));
-                strcpy(sn->data, buf);
-                sn->next = nullptr;
-                rc = true;
-                if (!sec->next) // если секция в конце
-                {
-                    sec->next = sn;
-                }
-                else // если секция в середине
-                {
-                    StrNode* tmp = sec->next;
-                    sec->next = sn;
-                    sn->next = tmp;
-                }
+                sec->next = sn;
+            }
+            else // если секция в середине
+            {
+                StrNode* tmp = sec->next;
+                sec->next = sn;
+                sn->next = tmp;
             }
             break;
         }
@@ -210,38 +242,45 @@ bool IniFile :: set_param(const char* section, const char* param, const char* st
 }
 
 
-bool IniFile :: rewind_section(StrNode* cur, const char* section, int* found, char* buf) const
+void IniFile :: rewind_section(StrNode* cur, const char* section, int* found, char* buf) const
 {
-    // Начало секции?
-    if (1 == sscanf(cur->data, " [%[^]]] ", buf))
+    if (*found == IniRS::NONE)
     {
-        *found += 1;
-        // Искомая секция?
-        sprintf(buf, "[%s]\n", section);
-        if (0 == strcmp(buf, cur->data))
-            *found += 1;
-        else
-            *found = 0;
-
-        // Взять следующий узел
-        if ((*found == 2) && (cur->next != nullptr))
+        if (1 == sscanf(cur->data, " [%[^]]] ", buf))
         {
-            return true;
+            *found = IniRS::BEGIN;
         }
     }
-    // дошли до конца секции и файла
-    else if ((*found == 2) && (cur->next == nullptr))
+    else if (*found == IniRS::BEGIN)
     {
-        *found += 1;
+        sprintf(buf, "[%s]\n", section);
+        if (0 == strcmp(buf, cur->data))
+        {
+            *found = IniRS::FOUND;
+        }
+        else
+        {
+            *found = IniRS::NONE;   
+        }
     }
-    // следующий - начало другой секции
-    else if ((*found == 2) && cur->next)
+    else if (*found == IniRS::FOUND)
     {
-        if (1 == sscanf(cur->next->data, " [%[^]]] ", buf))
-            *found += 1;
+        if (1 == sscanf(cur->data, " [%[^]]] ", buf))
+        {
+            *found = IniRS::END;
+        }
+        else
+        {
+            *found = IniRS::PARAM;
+        }
     }
-
-    return false;
+    else if (*found == IniRS::PARAM)
+    {
+        if (1 == sscanf(cur->data, " [%[^]]] ", buf))
+        {
+            *found = IniRS::END;
+        }
+    }
 }
 
 
@@ -253,14 +292,17 @@ bool IniFile :: delete_param(const char* section, const char* param)
     bool rc = false;
     while (cur)
     {
-        if (rewind_section(cur, section, &found, buf))
+        rewind_section(cur, section, &found, buf);
+        if (found == IniRS::BEGIN)
+        {
+            continue;
+        }
+        else if (found == IniRS::FOUND)
         {
             cur = cur->next;
             continue;
         }
-        
-        // Удалить параметр в секции
-        if (found == 2)
+        else if (found == IniRS::PARAM)
         {
             sprintf(buf, "%s =", param);
             size_t ls = strlen(buf);
@@ -270,7 +312,7 @@ bool IniFile :: delete_param(const char* section, const char* param)
                 break;
             }
         }
-        else if (found > 2)
+        else if (found == IniRS::END)
         {
             break;
         }
@@ -289,33 +331,35 @@ void IniFile :: clear(void)
 bool IniFile :: delete_section(const char* section)
 {
     StrNode* cur = lines.top();
-    int found = 0;
+    int found = IniRS::NONE;
     char buf[INI_LINELEN_MAX];
     while (cur)
     {
-        if (rewind_section(cur, section, &found, buf))
+        rewind_section(cur, section, &found, buf);
+        if (found == IniRS::BEGIN) 
+        {
+            continue;
+        }
+        else if (found == IniRS::FOUND) 
         {
             cur = cur->next;
             continue;
         }
-
-        // Удалить параметр в секции
-        if (found == 2)
+        else if (found == IniRS::PARAM)
         {
             if (lines.remove(cur->data))
             {
                 cur = lines.top();
-                found = 0;
+                found = IniRS::NONE;
                 continue;
             }
         }
-        else if (found > 2)
+        else if (found == IniRS::END)
         {
             break;
         }
         cur = cur->next;
     }
-    // Удалить секцию
     sprintf(buf, "[%s]\n", section);
     return lines.remove(buf);
 }

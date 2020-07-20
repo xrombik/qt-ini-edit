@@ -9,11 +9,12 @@
 
 #define INI_LINELEN_MAX 1024
 
+enum IniRS {NONE, BEGIN, FOUND, PARAM, END};
 
 class IniFile
 {
     StrList lines;
-    bool rewind_section(StrNode* cur, const char* section, int* found, char* buf) const;
+    void rewind_section(StrNode* cur, const char* section, int* found, char* buf) const;
 
     template <typename T>
     void format_params(char* buf, const char* fmt, size_t count, T* vals);
@@ -25,6 +26,8 @@ public:
     IniFile () {}
 
     virtual ~IniFile() { }
+    
+    void append(const char* s);
 
     /// очистка КФ
     void clear();
@@ -59,6 +62,12 @@ public:
 
     /// пишет массив чисел c плавающей точкой buf[0..count-1] в параметр param секции section
     bool set_param(const char* section, const char* param, int count, const double* buf);
+
+    /// Переименовывает название параметра param1 на param2 в секции section
+    bool rename_param(const char* section, const char* param1, const char* param2);
+
+    /// Переименовывает название секции section1 на section2
+    bool rename_section(const char* section1, const char* section2);
 
     /// читает в buf строку (массив чисел) из параметра param секции section
     /// max_buf_size : размер буфера для чтения строки

@@ -1,6 +1,6 @@
 if not exist "build" mkdir "build"
 cd build
-cmake ..
+cmake .. 
 msbuild qt-ini-edit.sln
 cd ..
 pause

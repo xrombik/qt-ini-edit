@@ -45,6 +45,41 @@ bool StrList :: pop(char *s)
 }
 
 
+void StrList :: remove_next(StrNode* sn_prev, StrNode* sn)
+{
+    if (sn_prev)
+    {
+        sn_prev->next = sn->next;
+    }
+    else
+    {
+        root = sn->next;    
+    }
+    free(sn->data);
+    free(sn);
+}
+
+
+bool StrList :: remove(StrNode* sn1)
+{
+    StrNode* sn = root;
+    StrNode* sn_prev = nullptr;
+    bool rc = false;
+    while (sn)
+    {
+        if (sn == sn1)
+        {
+            remove_next(sn_prev, sn);
+            rc = true;
+            break;
+        }
+        sn_prev = sn;
+        sn = sn->next;
+    }
+    return rc;
+}
+
+
 bool StrList::remove(const char* s)
 {
     StrNode* sn = root;
@@ -54,16 +89,7 @@ bool StrList::remove(const char* s)
     {
         if (0 == strcmp(sn->data, s))
         {
-            if (sn_prev)
-            {
-                sn_prev->next = sn->next;
-            }
-            else
-            {
-                root = sn->next;
-            }
-            free(sn->data);
-            free(sn);
+            remove_next(sn_prev, sn);
             rc = true;
             break;
         }

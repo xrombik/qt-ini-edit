@@ -34,10 +34,13 @@ int main(int argc, char** argv)
     bool rc9 = sl.pop(buf);
     bool rc10 = sl.pop(buf);
     bool rc11 = sl.pop(buf);
+    
+    StrNode* sn14 = sl.append("FOR_DELETE_BY_PTR");
+    StrNode* sn15 = sl.find(sn14->data);
+    bool rc12 = sl.remove(sn15);
 
-    rc = (sn1 == sn5) && (sn2 == sn6) && (sn3 == sn7) && (sn4 == sn8) && (sn9 == nullptr);
-    rc &= (rc1 == false) && (rc2 == true) && (rc3 == true) && (rc4 == true) && (rc5 == true) && (rc6 == false);
-    rc &= (sn10 != nullptr) && (sn11 != nullptr) && (sn12 != nullptr) && (sn13 != nullptr);
-    rc &= (rc7 == true) && (rc8 == true) && (rc9 == true) && (rc10 == true) && (rc11 == false);
+    rc = (sn1 == sn5) && (sn2 == sn6) && (sn3 == sn7) && (sn4 == sn8) && (!sn9) 
+        && (!rc1) && rc2 && rc3 && rc4 && rc5 && (!rc6) && sn10 && sn11 && sn12
+        && sn13 && rc7 && rc8 && rc9 && rc10 && (!rc11) && (sn14 == sn15) && rc12;
     return rc ? 0 : 1;
 }

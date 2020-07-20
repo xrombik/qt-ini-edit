@@ -11,7 +11,6 @@
 class KeyReceiver : public QObject
 {
     Q_OBJECT
-
 protected:
     bool eventFilter(QObject *obj, QEvent *event) override;
 public:
@@ -22,17 +21,19 @@ public:
 class MainWindow : public QWidget
 {
     Q_OBJECT
-    int lvl;
-public:
-    MainWindow(const char* fileName,  const char* outFileName, QWidget* parent = nullptr);
-    void processKeyEvent(QKeyEvent* keyEvent);
-private:
     const char* getCurSectionName(void) const;
-    QLabel lblPath;
-    QLabel lblOutPath;
+    const char* getCurParamName(void) const;
+    QLabel lblMsg;
+    QLabel lblSection;
+    const char* outFileName;
     QVBoxLayout mainLayout;
     QTableView tblView;
     IniFile ini;
     InifileModel inimodel;
     KeyReceiver keyReceiver;
+public:
+    MainWindow(const char* fileName,  const char* outFileName, QWidget* parent = nullptr);
+    void processKeyEvent(QKeyEvent* keyEvent);
+public slots:
+    void onDataChanged(QString& s);
 };
