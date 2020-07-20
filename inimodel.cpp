@@ -29,7 +29,10 @@ bool InifileModel::setData(const QModelIndex& index, const QVariant& value, int 
 
 Qt::ItemFlags InifileModel::flags(const QModelIndex& index) const
 {
-    return Qt::ItemIsSelectable | Qt::ItemIsEditable | Qt::ItemIsEnabled;
+    if (index.column() == 1)
+        return Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsEditable;
+    else
+        return Qt::ItemIsSelectable | Qt::ItemIsEnabled;
 }
 
 
